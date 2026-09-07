@@ -6,11 +6,13 @@
     "dev:auth": "cd services/auth && npm run dev",
     "dev:payment": "cd services/payment && npm run dev",
     "dev:notification": "cd services/notification && npm run dev",
-    "dev:all": "concurrently \"npm run dev:auth\" \"npm run dev:payment\" \"npm run dev:notification\"",
-    "install:all": "npm run install:auth && npm run install:payment && npm run install:notification",
+    "dev:aggregator": "cd services/aggregator && npm run dev",
+    "dev:all": "concurrently \"npm run dev:auth\" \"npm run dev:payment\" \"npm run dev:notification\" \"npm run dev:aggregator\"",
+    "install:all": "npm run install:auth && npm run install:payment && npm run install:notification && npm run install:aggregator",
     "install:auth": "cd services/auth && npm install",
     "install:payment": "cd services/payment && npm install",
-    "install:notification": "cd services/notification && npm install"
+    "install:notification": "cd services/notification && npm install",
+    "install:aggregator": "cd services/aggregator && npm install"
   },
   "devDependencies": {
     "concurrently": "^8.0.0"
