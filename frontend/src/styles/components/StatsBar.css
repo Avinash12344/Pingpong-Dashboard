@@ -1,0 +1,63 @@
+@import '../variables.css';
+
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+}
+
+.stats-bar__item {
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-4);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  animation: slideIn 0.5s ease-out;
+}
+
+.stats-bar__icon {
+  font-size: 1.75rem;
+}
+
+.stats-bar__icon--blue {
+  color: var(--color-primary);
+}
+
+.stats-bar__icon--green {
+  color: var(--color-success);
+}
+
+.stats-bar__icon--red {
+  color: var(--color-danger);
+}
+
+.stats-bar__icon--purple {
+  color: var(--color-secondary);
+}
+
+.stats-bar__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stats-bar__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  margin: 0;
+}
+
+.stats-bar__value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-gray-800);
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .stats-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
