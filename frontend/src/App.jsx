@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery } from 'react-query';
 import { fetchServiceStatus, fetchServiceHistory, triggerHealthCheck } from './api/services';
 import ServiceCard from './components/ServiceCard';
@@ -6,10 +6,13 @@ import StatusChart from './components/StatusChart';
 import LatencyChart from './components/LatencyChart';
 import StatsBar from './components/StatsBar';
 import ControlPanel from './components/ControlPanel';
+import ChaosPanel from './components/ChaosPanel';
+import AlertSystem from './components/AlertSystem';
 import '../src/styles/globals.css';
 
 function App() {
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
+  const [previousStatus, setPreviousStatus] = useState(null);
 
   const {
     data: statusData,
@@ -19,6 +22,9 @@ function App() {
   } = useQuery('serviceStatus', fetchServiceStatus, {
     refetchInterval: isAutoRefresh ? 5000 : false,
     refetchOnWindowFocus: true,
+    onSuccess: (data) => {
+      setPreviousStatus(statusData); // Store previous status for alerts
+    },
   });
 
   const {
@@ -66,47 +72,56 @@ function App() {
   }
 
   return (
-    <div className="container" style={{ paddingTop: 'var(--spacing-8)', paddingBottom: 'var(--spacing-8)' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
-        <ControlPanel
-          onRefresh={handleRefresh}
-          isAutoRefresh={isAutoRefresh}
-          onToggleAutoRefresh={toggleAutoRefresh}
-        />
+    <>
+      <AlertSystem 
+        serviceStatus={statusData} 
+        previousStatus={previousStatus} 
+      />
+      
+      <div className="container" style={{ paddingTop: 'var(--spacing-8)', paddingBottom: 'var(--spacing-8)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
+          <ControlPanel
+            onRefresh={handleRefresh}
+            isAutoRefresh={isAutoRefresh}
+            onToggleAutoRefresh={toggleAutoRefresh}
+          />
 
-        <StatsBar status={statusData} />
+          <ChaosPanel onChaosAction={handleRefresh} />
 
-        {statusData?.services && (
+          <StatsBar status={statusData} />
+
+          {statusData?.services && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: 'var(--spacing-6)',
+            }}>
+              {Object.values(statusData.services).map((service) => (
+                <ServiceCard key={service.name} service={service} />
+              ))}
+            </div>
+          )}
+
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
             gap: 'var(--spacing-6)',
           }}>
-            {Object.values(statusData.services).map((service) => (
-              <ServiceCard key={service.name} service={service} />
-            ))}
+            <StatusChart history={historyData} />
+            <LatencyChart history={historyData} />
           </div>
-        )}
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: 'var(--spacing-6)',
-        }}>
-          <StatusChart history={historyData} />
-          <LatencyChart history={historyData} />
+          {isAutoRefresh && (
+            <div className="text-center animate-pulse" style={{
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontSize: 'var(--font-size-sm)',
+            }}>
+              Auto-refreshing every 5 seconds...
+            </div>
+          )}
         </div>
-
-        {isAutoRefresh && (
-          <div className="text-center animate-pulse" style={{
-            color: 'rgba(255, 255, 255, 0.6)',
-            fontSize: 'var(--font-size-sm)',
-          }}>
-            Auto-refreshing every 5 seconds...
-          </div>
-        )}
       </div>
-    </div>
+    </>
   );
 }
 

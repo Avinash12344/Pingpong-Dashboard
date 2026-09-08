@@ -1,0 +1,206 @@
+@import '../variables.css';
+
+.chaos-panel {
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-6);
+  box-shadow: var(--shadow-lg);
+  border: 2px solid #fbbf24;
+  animation: slideIn 0.5s ease-out;
+}
+
+.chaos-panel__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 2px solid var(--color-gray-200);
+}
+
+.chaos-panel__icon {
+  font-size: 1.75rem;
+  color: #dc2626;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.chaos-panel__title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-gray-800);
+  margin: 0;
+}
+
+.chaos-panel__badge {
+  margin-left: auto;
+  background: #fef3c7;
+  color: #92400e;
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.chaos-panel__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+}
+
+.chaos-panel__group {
+  flex: 1;
+  min-width: 150px;
+}
+
+.chaos-panel__label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray-700);
+  margin-bottom: var(--spacing-2);
+}
+
+.chaos-panel__select {
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-white);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-800);
+}
+
+.chaos-panel__slider {
+  width: 100%;
+  accent-color: #dc2626;
+}
+
+.chaos-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.chaos-panel__btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.chaos-panel__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chaos-panel__btn--kill {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.chaos-panel__btn--kill:hover:not(:disabled) {
+  background: #fee2e2;
+  transform: scale(1.02);
+}
+
+.chaos-panel__btn--restore {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.chaos-panel__btn--restore:hover:not(:disabled) {
+  background: #d1fae5;
+  transform: scale(1.02);
+}
+
+.chaos-panel__btn--latency {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.chaos-panel__btn--latency:hover:not(:disabled) {
+  background: #fef3c7;
+  transform: scale(1.02);
+}
+
+.chaos-panel__btn--remove {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.chaos-panel__btn--remove:hover:not(:disabled) {
+  background: #e5e7eb;
+  transform: scale(1.02);
+}
+
+.chaos-panel__btn--db {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.chaos-panel__btn--db:hover:not(:disabled) {
+  background: #dbeafe;
+  transform: scale(1.02);
+}
+
+.chaos-panel__btn--kill-all {
+  background: #dc2626;
+  color: white;
+}
+
+.chaos-panel__btn--kill-all:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: scale(1.02);
+}
+
+.chaos-panel__btn--restore-all {
+  background: #059669;
+  color: white;
+}
+
+.chaos-panel__btn--restore-all:hover:not(:disabled) {
+  background: #047857;
+  transform: scale(1.02);
+}
+
+.chaos-panel__loading {
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-3);
+  background: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+  color: var(--color-gray-600);
+}
+
+.chaos-panel__spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-gray-300);
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .chaos-panel {
+    padding: var(--spacing-4);
+  }
+  
+  .chaos-panel__btn {
+    min-width: 100%;
+  }
+}

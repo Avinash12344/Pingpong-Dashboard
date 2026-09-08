@@ -1,0 +1,139 @@
+@import '../variables.css';
+
+.alert-container {
+  position: fixed;
+  top: var(--spacing-4);
+  right: var(--spacing-4);
+  max-width: 400px;
+  width: 100%;
+  z-index: var(--z-tooltip);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  pointer-events: none;
+}
+
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  pointer-events: all;
+}
+
+.alert {
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-4);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  border-left: 4px solid var(--color-gray-400);
+  animation: slideIn 0.3s ease-out;
+}
+
+.alert--error {
+  border-left-color: #dc2626;
+}
+
+.alert--success {
+  border-left-color: #059669;
+}
+
+.alert--warning {
+  border-left-color: #d97706;
+}
+
+.alert--info {
+  border-left-color: #3b82f6;
+}
+
+.alert__content {
+  display: flex;
+  gap: var(--spacing-3);
+  flex: 1;
+}
+
+.alert__icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.alert__icon--error {
+  color: #dc2626;
+}
+
+.alert__icon--success {
+  color: #059669;
+}
+
+.alert__icon--warning {
+  color: #d97706;
+}
+
+.alert__icon--info {
+  color: #3b82f6;
+}
+
+.alert__body {
+  flex: 1;
+}
+
+.alert__message {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray-800);
+}
+
+.alert__details {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  margin-top: var(--spacing-1);
+}
+
+.alert__timestamp {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  margin-top: var(--spacing-1);
+}
+
+.alert__close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-gray-400);
+  padding: 0 var(--spacing-1);
+  transition: color var(--transition-fast);
+}
+
+.alert__close:hover {
+  color: var(--color-gray-600);
+}
+
+.alert__clear-all {
+  background: var(--color-gray-800);
+  color: var(--color-white);
+  border: none;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  align-self: flex-end;
+}
+
+.alert__clear-all:hover {
+  background: var(--color-gray-900);
+  transform: scale(1.02);
+}
+
+@media (max-width: 640px) {
+  .alert-container {
+    top: var(--spacing-2);
+    right: var(--spacing-2);
+    max-width: calc(100% - var(--spacing-4));
+  }
+}

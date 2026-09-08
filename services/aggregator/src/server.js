@@ -61,12 +61,43 @@ SERVICES.forEach(service => {
 // Function to check a single service
 async function checkService(service) {
   const startTime = Date.now();
+  
+  // Check if service is killed
+  if (chaosConfig.killedServices[service.name]) {
+    return {
+      name: service.name,
+      status: 'unhealthy',
+      latency: null,
+      timestamp: new Date().toISOString(),
+      details: null,
+      error: 'Service killed by Chaos Monkey'
+    };
+  }
+
   try {
+    // Apply latency if configured
+    const latencyMs = chaosConfig.latencyConfig[service.name] || 0;
+    if (latencyMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, latencyMs));
+    }
+
     const response = await axios.get(`${service.url}${service.healthEndpoint}`, {
-      timeout: 3000 // 3 second timeout
+      timeout: 3000 + (latencyMs || 0) // Extend timeout if latency is added
     });
     
     const latency = Date.now() - startTime;
+    
+    // Check if database is disconnected (for payment service)
+    if (service.name === 'payment' && chaosConfig.dbStatus.payment === 'disconnected') {
+      return {
+        name: service.name,
+        status: 'unhealthy',
+        latency: latency,
+        timestamp: new Date().toISOString(),
+        details: response.data,
+        error: 'Database disconnected (Chaos Monkey)'
+      };
+    }
     
     return {
       name: service.name,
@@ -84,9 +115,8 @@ async function checkService(service) {
     if (error.code === 'ECONNREFUSED') {
       errorMessage = 'Service is not running';
     } else if (error.code === 'ETIMEDOUT') {
-      errorMessage = 'Service timed out';
+      errorMessage = 'Service timed out (Chaos Monkey latency?)';
     } else if (error.response) {
-      status = 'unhealthy';
       errorMessage = `HTTP ${error.response.status}: ${error.response.statusText}`;
     }
     
@@ -295,6 +325,196 @@ app.get('/', (req, res) => {
       health: 'GET /health'
     },
     documentation: 'https://github.com/Avinash12344/Pingpong-Dashboard'
+  });
+});
+
+// ============================================
+// CHAOS MONKEY ENDPOINTS
+// ============================================
+
+// Store service configurations for Chaos Monkey
+let chaosConfig = {
+  killedServices: {},
+  latencyConfig: {},
+  dbStatus: {}
+};
+
+// 1. KILL a service (simulate crash)
+app.post('/api/chaos/kill/:serviceName', async (req, res) => {
+  const { serviceName } = req.params;
+  
+  // Find the service
+  const service = SERVICES.find(s => s.name === serviceName);
+  if (!service) {
+    return res.status(404).json({ error: 'Service not found' });
+  }
+
+  // Mark as killed
+  chaosConfig.killedServices[serviceName] = true;
+  
+  console.log(`🔪 Chaos Monkey killed ${serviceName} service!`);
+  
+  // Immediately update status to show as unhealthy
+  if (serviceStatus[serviceName]) {
+    serviceStatus[serviceName].status = 'unhealthy';
+    serviceStatus[serviceName].error = 'Service killed by Chaos Monkey';
+  }
+
+  res.json({
+    success: true,
+    message: `💀 ${serviceName} service has been killed by Chaos Monkey!`,
+    service: serviceName,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 2. RESTORE a killed service
+app.post('/api/chaos/restore/:serviceName', async (req, res) => {
+  const { serviceName } = req.params;
+  
+  if (chaosConfig.killedServices[serviceName]) {
+    delete chaosConfig.killedServices[serviceName];
+    console.log(`🔄 Restored ${serviceName} service`);
+    
+    // Trigger immediate health check to update status
+    setTimeout(checkAllServices, 1000);
+    
+    res.json({
+      success: true,
+      message: `✅ ${serviceName} service has been restored!`,
+      service: serviceName,
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    res.status(400).json({ error: 'Service is not currently killed' });
+  }
+});
+
+// 3. INJECT LATENCY into a service
+app.post('/api/chaos/latency/:serviceName', async (req, res) => {
+  const { serviceName } = req.params;
+  const { latencyMs } = req.body;
+  
+  if (!latencyMs || latencyMs < 0 || latencyMs > 5000) {
+    return res.status(400).json({ 
+      error: 'Please provide latencyMs (0-5000ms)' 
+    });
+  }
+
+  // Find the service
+  const service = SERVICES.find(s => s.name === serviceName);
+  if (!service) {
+    return res.status(404).json({ error: 'Service not found' });
+  }
+
+  // Store latency configuration
+  chaosConfig.latencyConfig[serviceName] = latencyMs;
+  
+  console.log(`🐌 Chaos Monkey added ${latencyMs}ms latency to ${serviceName} service!`);
+
+  res.json({
+    success: true,
+    message: `🐌 Added ${latencyMs}ms latency to ${serviceName}!`,
+    service: serviceName,
+    latencyMs: latencyMs,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 4. REMOVE latency
+app.post('/api/chaos/remove-latency/:serviceName', async (req, res) => {
+  const { serviceName } = req.params;
+  
+  if (chaosConfig.latencyConfig[serviceName]) {
+    delete chaosConfig.latencyConfig[serviceName];
+    console.log(`✅ Removed latency from ${serviceName} service`);
+    
+    res.json({
+      success: true,
+      message: `✅ Removed latency from ${serviceName}!`,
+      service: serviceName,
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    res.status(400).json({ error: 'No latency configuration found for this service' });
+  }
+});
+
+// 5. TOGGLE database connection (Payment service)
+app.post('/api/chaos/toggle-db/:serviceName', async (req, res) => {
+  const { serviceName } = req.params;
+  
+  // Only payment service has this feature
+  if (serviceName !== 'payment') {
+    return res.status(400).json({ 
+      error: 'Only payment service has database toggle feature' 
+    });
+  }
+
+  // Toggle DB status
+  const currentStatus = chaosConfig.dbStatus[serviceName] || 'connected';
+  const newStatus = currentStatus === 'connected' ? 'disconnected' : 'connected';
+  chaosConfig.dbStatus[serviceName] = newStatus;
+
+  console.log(`🗄️ ${serviceName} database ${newStatus}`);
+
+  res.json({
+    success: true,
+    message: `🗄️ ${serviceName} database ${newStatus === 'connected' ? 'reconnected' : 'disconnected'}!`,
+    service: serviceName,
+    dbStatus: newStatus,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 6. Get current Chaos configuration
+app.get('/api/chaos/config', (req, res) => {
+  res.json({
+    timestamp: new Date().toISOString(),
+    chaosConfig: chaosConfig,
+    serviceStatus: Object.values(serviceStatus).map(s => ({
+      name: s.name,
+      status: s.status,
+      latency: s.latency,
+      error: s.error
+    }))
+  });
+});
+
+// 7. KILL ALL services (full chaos)
+app.post('/api/chaos/kill-all', async (req, res) => {
+  console.log('☠️ Chaos Monkey killing ALL services!');
+  
+  SERVICES.forEach(service => {
+    chaosConfig.killedServices[service.name] = true;
+    if (serviceStatus[service.name]) {
+      serviceStatus[service.name].status = 'unhealthy';
+      serviceStatus[service.name].error = 'Service killed by Chaos Monkey';
+    }
+  });
+
+  res.json({
+    success: true,
+    message: '☠️ ALL services have been killed by Chaos Monkey!',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 8. RESTORE ALL services
+app.post('/api/chaos/restore-all', async (req, res) => {
+  chaosConfig.killedServices = {};
+  chaosConfig.latencyConfig = {};
+  chaosConfig.dbStatus = {};
+  
+  console.log('✅ Chaos Monkey restored ALL services!');
+  
+  // Trigger immediate health check
+  setTimeout(checkAllServices, 1000);
+
+  res.json({
+    success: true,
+    message: '✅ ALL services have been restored!',
+    timestamp: new Date().toISOString()
   });
 });
 
